@@ -81,7 +81,7 @@ EncodeResult _optionsDiffEncode(OptionsDiff diff, List<dynamic> children) {
     res = TexCommandEncodeResult(
       command: '\\textcolor',
       args: <dynamic>[
-        '#${diff.color!.value.toRadixString(16).padLeft(6, '0')}',
+        '#${diff.color!.r.toInt().toRadixString(16).padLeft(2, '0')}${diff.color!.g.toInt().toRadixString(16).padLeft(2, '0')}${diff.color!.b.toInt().toRadixString(16).padLeft(2, '0')}',
         res,
       ],
     );

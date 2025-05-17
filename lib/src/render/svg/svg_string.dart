@@ -14,7 +14,7 @@ String svgStringFromPath(
     'viewBox='
     '"${viewBox.left} ${viewBox.top} ${viewBox.width} ${viewBox.height}" '
     '>'
-    '<path fill="rgb(${color.red},${color.green},${color.blue})" d="$path"></path>'
+    '<path fill="rgb(${color.r.toInt()},${color.g.toInt()},${color.b.toInt()})" d="$path"></path>'
     '</svg>';
 
 final _alignmentToString = {
@@ -39,17 +39,26 @@ Widget svgWidgetFromPath(
 }) {
   final alignment = _alignmentToString[align];
 
-  assert(fit != BoxFit.none &&
-      fit != BoxFit.fitHeight &&
-      fit != BoxFit.fitWidth &&
-      fit != BoxFit.scaleDown);
+  assert(
+    fit != BoxFit.none &&
+        fit != BoxFit.fitHeight &&
+        fit != BoxFit.fitWidth &&
+        fit != BoxFit.scaleDown,
+  );
   final meetOrSlice = fit == BoxFit.contain ? 'meet' : 'slice';
 
   final preserveAspectRatio =
       fit == BoxFit.fill ? 'none' : '$alignment $meetOrSlice';
 
-  final svgString = svgStringFromPath(path, viewPort, viewBox, color,
-      preserveAspectRatio: preserveAspectRatio);
+  final svgString = svgStringFromPath(
+    path,
+    viewPort,
+    viewBox,
+    color,
+    preserveAspectRatio: preserveAspectRatio,
+  );
+
+  // ignore: sized_box_for_whitespace
   return Container(
     height: viewPort.height,
     width: viewPort.width,

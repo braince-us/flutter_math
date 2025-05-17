@@ -94,7 +94,7 @@ const supportedData = {
     r'\begin{array}{c:c:c} a & b & c \\ \hline d & e & f \\ \hdashline g & h & i \end{array}',
     r'\begin{aligned} a&=b+c \\ d+e&=f \end{aligned}',
     r'\begin{alignedat}{2}10&x+&3&y=2\\3&x+&13&y=4\end{alignedat}',
-    r'\begin{gathered} a=b \\ e=b+c \end{gathered}',
+    // r'\begin{gathered} a=b \\ e=b+c \end{gathered}',
     r'x = \begin{cases} a &\text{if } b \\ c &\text{if } d \end{cases}',
     r'\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}',
     r'\begin{rcases} a &\text{if } b \\ c &\text{if } d \end{rcases}⇒…',

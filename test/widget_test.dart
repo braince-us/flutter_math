@@ -9,17 +9,16 @@ void main() {
   group('Flutter Math', () {
     testWidgets('Should show default error message', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: Math.tex(r'\Gaarbled$')),
-        ),
+        MaterialApp(home: Scaffold(body: Math.tex(r'\Gaarbled$'))),
       );
       final finder = find.byType(SelectableText);
       expect(finder, findsOneWidget);
       expect(
-          (finder.evaluate().single.widget as SelectableText)
-              .data!
-              .startsWith('Parser Error:'),
-          isTrue);
+        (finder.evaluate().single.widget as SelectableText).data!.startsWith(
+          'Parser Error:',
+        ),
+        isTrue,
+      );
     });
     testWidgets('Should show onErrorFallback widget', (tester) async {
       await tester.pumpWidget(
@@ -27,10 +26,8 @@ void main() {
           home: Scaffold(
             body: Math.tex(
               r'\Gaarbled$',
-              onErrorFallback: (_) => Container(
-                width: 100,
-                height: 100,
-              ),
+              // ignore: sized_box_for_whitespace
+              onErrorFallback: (_) => Container(width: 100, height: 100),
             ),
           ),
         ),

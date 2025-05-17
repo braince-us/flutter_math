@@ -74,11 +74,11 @@ void main() {
 
 final _jsonEncoder = JsonEncoder.withIndent('  ');
 
-class _ToBreakLike extends Matcher {
+class ToBreakLike extends Matcher {
   final List<EquationRowNode> target;
   final List<int>? targetPenalties;
 
-  _ToBreakLike(List<String> target, this.targetPenalties)
+  ToBreakLike(List<String> target, this.targetPenalties)
       : target = target.map(getParsed).toList(growable: false);
 
   @override
@@ -122,5 +122,5 @@ class _ToBreakLike extends Matcher {
   }
 }
 
-_ToBreakLike toBreakLike(List<String> target, [List<int>? penalties]) =>
-    _ToBreakLike(target, penalties);
+ToBreakLike toBreakLike(List<String> target, [List<int>? penalties]) =>
+    ToBreakLike(target, penalties);
