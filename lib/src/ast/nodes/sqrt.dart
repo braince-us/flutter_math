@@ -44,7 +44,7 @@ class SqrtNode extends SlotableNode {
     final indexResult = childBuildResults[0];
     return BuildResult(
       options: options,
-      widget: CustomLayout<_SqrtPos>(
+      widget: CustomLayout<SqrtPos>(
         delegate: SqrtLayoutDelegate(
           options: options,
           baseOptions: baseResult.options,
@@ -52,7 +52,7 @@ class SqrtNode extends SlotableNode {
         ),
         children: <Widget>[
           CustomLayoutId(
-            id: _SqrtPos.base,
+            id: SqrtPos.base,
             child: MinDimension(
               minHeight: options.fontMetrics.xHeight.cssEm.toLpUnder(options),
               topPadding: 0,
@@ -60,7 +60,7 @@ class SqrtNode extends SlotableNode {
             ),
           ),
           CustomLayoutId(
-            id: _SqrtPos.surd,
+            id: SqrtPos.surd,
             // we use IgnorePointer here to ignore root image during hit test,
             // so 'SelectionManagerMixin.getRenderLineAtOffset' can find
             // render lines in the base widget
@@ -76,7 +76,7 @@ class SqrtNode extends SlotableNode {
           ),
           if (index != null)
             CustomLayoutId(
-              id: _SqrtPos.ind,
+              id: SqrtPos.ind,
               child: indexResult!.widget,
             ),
         ],
@@ -126,14 +126,14 @@ class SqrtNode extends SlotableNode {
       );
 }
 
-enum _SqrtPos {
+enum SqrtPos {
   base,
   ind, // Name collision here
   surd,
 }
 
 // Square roots are handled in the TeXbook pg. 443, Rule 11.
-class SqrtLayoutDelegate extends CustomLayoutDelegate<_SqrtPos> {
+class SqrtLayoutDelegate extends CustomLayoutDelegate<SqrtPos> {
   final MathOptions options;
   final MathOptions baseOptions;
   // final MathOptions indexOptions;
@@ -149,7 +149,7 @@ class SqrtLayoutDelegate extends CustomLayoutDelegate<_SqrtPos> {
 
   @override
   double computeDistanceToActualBaseline(
-          TextBaseline baseline, Map<_SqrtPos, RenderBox> childrenTable) =>
+          TextBaseline baseline, Map<SqrtPos, RenderBox> childrenTable) =>
       heightAboveBaseline;
 
   @override
@@ -158,19 +158,19 @@ class SqrtLayoutDelegate extends CustomLayoutDelegate<_SqrtPos> {
     required bool max,
     required double extent,
     required double Function(RenderBox child, double extent) childSize,
-    required Map<_SqrtPos, RenderBox> childrenTable,
+    required Map<SqrtPos, RenderBox> childrenTable,
   }) =>
       0;
 
   @override
   Size computeLayout(
     BoxConstraints constraints,
-    Map<_SqrtPos, RenderBox> childrenTable, {
+    Map<SqrtPos, RenderBox> childrenTable, {
     bool dry = true,
   }) {
-    final base = childrenTable[_SqrtPos.base]!;
-    final index = childrenTable[_SqrtPos.ind];
-    final surd = childrenTable[_SqrtPos.surd]!;
+    final base = childrenTable[SqrtPos.base]!;
+    final index = childrenTable[SqrtPos.ind];
+    final surd = childrenTable[SqrtPos.surd]!;
 
     final Size baseSize = base.getLayoutSize(infiniteConstraint, dry: dry);
     final Size indexSize = index?.getLayoutSize(

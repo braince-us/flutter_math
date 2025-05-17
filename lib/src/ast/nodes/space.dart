@@ -27,6 +27,7 @@ class SpaceNode extends LeafNode {
 
   /// Break penalty for a manual line breaking command.
   ///
+  // ignore: unintended_html_in_doc_comment
   /// Related TeX command: \nobreak, \allowbreak, \penalty<number>.
   ///
   /// Should be null for normal space commands.
@@ -35,6 +36,7 @@ class SpaceNode extends LeafNode {
   /// Whether to fill with text color.
   final bool fill;
 
+  @override
   final Mode mode;
 
   final bool alignerOrSpacer;

@@ -31,13 +31,13 @@ class LineElement extends ParentDataWidget<LineParentData> {
   final bool alignerOrSpacer;
 
   const LineElement({
-    Key? key,
+    super.key,
     this.canBreakBefore = false,
     this.customCrossSize,
     this.trailingMargin = 0.0,
     this.alignerOrSpacer = false,
-    required Widget child,
-  }) : super(key: key, child: child);
+    required super.child,
+  });
 
   @override
   void applyParentData(RenderObject renderObject) {
@@ -89,15 +89,15 @@ class LineElement extends ParentDataWidget<LineParentData> {
 
 /// Line provides abilities for line breaks, delim-sizing and background color indicator.
 class Line extends MultiChildRenderObjectWidget {
-  Line({
-    Key? key,
+  const Line({
+    super.key,
     this.crossAxisAlignment = CrossAxisAlignment.baseline,
     this.minDepth = 0.0,
     this.minHeight = 0.0,
     this.textBaseline = TextBaseline.alphabetic,
     this.textDirection,
-    List<Widget> children = const [],
-  }) : super(key: key, children: children);
+    super.children,
+  });
 
   final CrossAxisAlignment crossAxisAlignment;
 
@@ -405,7 +405,7 @@ class RenderLine extends RenderBox
 
     if (!dry) {
       this.caretOffsets = caretOffsets;
-      this._overflow = mainPos - size.width;
+      _overflow = mainPos - size.width;
       this.maxHeightAboveBaseline = maxHeightAboveBaseline;
     } else {
       return size;
@@ -482,7 +482,7 @@ class RenderLine extends RenderBox
 
     size = constraints.constrain(
         Size(mainPos, maxHeightAboveBaseline + maxDepthBelowBaseline));
-    this._overflow = mainPos - size.width;
+    _overflow = mainPos - size.width;
 
     return size;
   }

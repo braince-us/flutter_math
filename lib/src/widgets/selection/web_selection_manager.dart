@@ -22,11 +22,13 @@ import 'selection_manager.dart';
 ///
 mixin WebSelectionControlsManagerMixin<T extends StatefulWidget>
     on SelectionManagerMixin<T> implements TextInputClient {
+  @override
   FocusNode get focusNode;
   late FocusNode _oldFocusNode;
 
   TextInputConnection? _textInputConnection;
 
+  @override
   bool get hasFocus => focusNode.hasFocus;
 
   late MathController _oldController;
@@ -110,7 +112,7 @@ mixin WebSelectionControlsManagerMixin<T extends StatefulWidget>
 
   void _updateSizeAndTransform() {
     if (_textInputConnection != null) {
-      final renderBox = this.context.findRenderObject();
+      final renderBox = context.findRenderObject();
       if (renderBox is RenderBox) {
         final size = renderBox.size;
         final transform = renderBox.getTransformTo(null);

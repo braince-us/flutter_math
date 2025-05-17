@@ -37,12 +37,14 @@ class LeftRightNode extends SlotableNode<EquationRowNode> {
     required this.rightDelim,
     required this.body,
     this.middle = const [],
-  })  : assert(body.isNotEmpty),
-        assert(middle.length == body.length - 1);
+  }) : assert(body.isNotEmpty),
+       assert(middle.length == body.length - 1);
 
   @override
   BuildResult buildWidget(
-      MathOptions options, List<BuildResult?> childBuildResults) {
+    MathOptions options,
+    List<BuildResult?> childBuildResults,
+  ) {
     final numElements = 2 + body.length + middle.length;
     final a = options.fontMetrics.axisHeight.cssEm.toLpUnder(options);
 
@@ -52,45 +54,46 @@ class LeftRightNode extends SlotableNode<EquationRowNode> {
         return LineElement(
           customCrossSize: (height, depth) {
             final delta = math.max(height - a, depth + a);
-            final delimeterFullHeight = math.max(delta / 500 * delimiterFactor,
-                2 * delta - delimiterShorfall.toLpUnder(options));
+            final delimeterFullHeight = math.max(
+              delta / 500 * delimiterFactor,
+              2 * delta - delimiterShorfall.toLpUnder(options),
+            );
             return BoxConstraints(minHeight: delimeterFullHeight);
           },
-          trailingMargin: index == numElements - 1
-              ? 0.0
-              : getSpacingSize(index == 0 ? AtomType.open : AtomType.rel,
-                      body[(index + 1) ~/ 2].leftType, options.style)
-                  .toLpUnder(options),
+          trailingMargin:
+              index == numElements - 1
+                  ? 0.0
+                  : getSpacingSize(
+                    index == 0 ? AtomType.open : AtomType.rel,
+                    body[(index + 1) ~/ 2].leftType,
+                    options.style,
+                  ).toLpUnder(options),
           child: LayoutBuilderPreserveBaseline(
-            builder: (context, constraints) => buildCustomSizedDelimWidget(
-              index == 0
-                  ? leftDelim
-                  : index == numElements - 1
+            builder:
+                (context, constraints) => buildCustomSizedDelimWidget(
+                  index == 0
+                      ? leftDelim
+                      : index == numElements - 1
                       ? rightDelim
                       : middle[index ~/ 2 - 1],
-              constraints.minHeight,
-              options,
-            ),
+                  constraints.minHeight,
+                  options,
+                ),
           ),
         );
       } else {
         // Content
         return LineElement(
           trailingMargin: getSpacingSize(
-                  body[index ~/ 2].rightType,
-                  index == numElements - 2 ? AtomType.close : AtomType.rel,
-                  options.style)
-              .toLpUnder(options),
+            body[index ~/ 2].rightType,
+            index == numElements - 2 ? AtomType.close : AtomType.rel,
+            options.style,
+          ).toLpUnder(options),
           child: childBuildResults[index ~/ 2]!.widget,
         );
       }
     }, growable: false);
-    return BuildResult(
-      options: options,
-      widget: Line(
-        children: childWidgets,
-      ),
-    );
+    return BuildResult(options: options, widget: Line(children: childWidgets));
   }
 
   @override
@@ -120,13 +123,13 @@ class LeftRightNode extends SlotableNode<EquationRowNode> {
       );
 
   @override
-  Map<String, Object?> toJson() => super.toJson()
-    ..addAll({
-      'body': body.map((e) => e.toJson()),
-      'leftDelim': leftDelim,
-      'rightDelim': rightDelim,
-      if (middle.isNotEmpty) 'middle': middle,
-    });
+  Map<String, Object?> toJson() =>
+      super.toJson()..addAll({
+        'body': body.map((e) => e.toJson()),
+        'leftDelim': leftDelim,
+        'rightDelim': rightDelim,
+        if (middle.isNotEmpty) 'middle': middle,
+      });
 }
 
 // TexBook Appendix B
@@ -170,12 +173,16 @@ const stackNeverDelimiters = {
 };
 
 Widget buildCustomSizedDelimWidget(
-    String? delim, double minDelimiterHeight, MathOptions options) {
+  String? delim,
+  double minDelimiterHeight,
+  MathOptions options,
+) {
   if (delim == null) {
     final axisHeight = options.fontMetrics.xHeight.cssEm.toLpUnder(options);
     return ShiftBaseline(
       relativePos: 0.5,
       offset: axisHeight,
+      // ignore: sized_box_for_whitespace
       child: Container(
         height: minDelimiterHeight,
         width: nullDelimiterSpace.toLpUnder(options),
@@ -192,14 +199,16 @@ Widget buildCustomSizedDelimWidget(
     sequence = stackAlwaysDelimiterSequence;
   }
 
-  var delimConf = sequence.firstWhereOrNull((element) =>
-      getHeightForDelim(
-        delim: delim,
-        fontName: element.font.fontName,
-        style: element.style,
-        options: options,
-      ) >
-      minDelimiterHeight);
+  var delimConf = sequence.firstWhereOrNull(
+    (element) =>
+        getHeightForDelim(
+          delim: delim,
+          fontName: element.font.fontName,
+          style: element.style,
+          options: options,
+        ) >
+        minDelimiterHeight,
+  );
   if (stackNeverDelimiters.contains(delim)) {
     delimConf ??= sequence.last;
   }
@@ -209,8 +218,12 @@ Widget buildCustomSizedDelimWidget(
     return ShiftBaseline(
       relativePos: 0.5,
       offset: axisHeight,
-      child: makeChar(delim, delimConf.font,
-          lookupChar(delim, delimConf.font, Mode.math), options),
+      child: makeChar(
+        delim,
+        delimConf.font,
+        lookupChar(delim, delimConf.font, Mode.math),
+        options,
+      ),
     );
   } else {
     return makeStackedDelim(delim, minDelimiterHeight, Mode.math, options);
@@ -218,33 +231,43 @@ Widget buildCustomSizedDelimWidget(
 }
 
 Widget makeStackedDelim(
-    String delim, double minDelimiterHeight, Mode mode, MathOptions options) {
+  String delim,
+  double minDelimiterHeight,
+  Mode mode,
+  MathOptions options,
+) {
   final conf = stackDelimiterConfs[delim]!;
   final topMetrics = lookupChar(conf.top, conf.font, Mode.math)!;
   final repeatMetrics = lookupChar(conf.repeat, conf.font, Mode.math)!;
   final bottomMetrics = lookupChar(conf.bottom, conf.font, Mode.math)!;
 
-  final topHeight =
-      (topMetrics.height + topMetrics.depth).cssEm.toLpUnder(options);
-  final repeatHeight =
-      (repeatMetrics.height + repeatMetrics.depth).cssEm.toLpUnder(options);
-  final bottomHeight =
-      (bottomMetrics.height + bottomMetrics.depth).cssEm.toLpUnder(options);
+  final topHeight = (topMetrics.height + topMetrics.depth).cssEm.toLpUnder(
+    options,
+  );
+  final repeatHeight = (repeatMetrics.height + repeatMetrics.depth).cssEm
+      .toLpUnder(options);
+  final bottomHeight = (bottomMetrics.height + bottomMetrics.depth).cssEm
+      .toLpUnder(options);
 
   var middleHeight = 0.0;
   var middleFactor = 1;
   CharacterMetrics? middleMetrics;
   if (conf.middle != null) {
     middleMetrics = lookupChar(conf.middle!, conf.font, Mode.math)!;
-    middleHeight =
-        (middleMetrics.height + middleMetrics.depth).cssEm.toLpUnder(options);
+    middleHeight = (middleMetrics.height + middleMetrics.depth).cssEm.toLpUnder(
+      options,
+    );
     middleFactor = 2;
   }
 
   final minHeight = topHeight + bottomHeight + middleHeight;
-  final repeatCount = math
-      .max(0, (minDelimiterHeight - minHeight) / (repeatHeight * middleFactor))
-      .ceil();
+  final repeatCount =
+      math
+          .max(
+            0,
+            (minDelimiterHeight - minHeight) / (repeatHeight * middleFactor),
+          )
+          .ceil();
 
   // final realHeight = minHeight + repeatCount * middleFactor * repeatHeight;
 
@@ -293,42 +316,90 @@ class StackDelimiterConf {
 const stackDelimiterConfs = {
   '\u2191': // '\\uparrow',
       StackDelimiterConf(
-          top: '\u2191', repeat: '\u23d0', bottom: '\u23d0', font: size1Font),
+    top: '\u2191',
+    repeat: '\u23d0',
+    bottom: '\u23d0',
+    font: size1Font,
+  ),
   '\u2193': // '\\downarrow',
       StackDelimiterConf(
-          top: '\u23d0', repeat: '\u23d0', bottom: '\u2193', font: size1Font),
+    top: '\u23d0',
+    repeat: '\u23d0',
+    bottom: '\u2193',
+    font: size1Font,
+  ),
   '\u2195': // '\\updownarrow',
       StackDelimiterConf(
-          top: '\u2191', repeat: '\u23d0', bottom: '\u2193', font: size1Font),
+    top: '\u2191',
+    repeat: '\u23d0',
+    bottom: '\u2193',
+    font: size1Font,
+  ),
   '\u21d1': // '\\Uparrow',
       StackDelimiterConf(
-          top: '\u21d1', repeat: '\u2016', bottom: '\u2016', font: size1Font),
+    top: '\u21d1',
+    repeat: '\u2016',
+    bottom: '\u2016',
+    font: size1Font,
+  ),
   '\u21d3': // '\\Downarrow',
       StackDelimiterConf(
-          top: '\u2016', repeat: '\u2016', bottom: '\u21d3', font: size1Font),
+    top: '\u2016',
+    repeat: '\u2016',
+    bottom: '\u21d3',
+    font: size1Font,
+  ),
   '\u21d5': // '\\Updownarrow',
       StackDelimiterConf(
-          top: '\u21d1', repeat: '\u2016', bottom: '\u21d3', font: size1Font),
+    top: '\u21d1',
+    repeat: '\u2016',
+    bottom: '\u21d3',
+    font: size1Font,
+  ),
   '|': // '\\|' ,'\\vert',
       StackDelimiterConf(
-          top: '\u2223', repeat: '\u2223', bottom: '\u2223', font: size1Font),
+    top: '\u2223',
+    repeat: '\u2223',
+    bottom: '\u2223',
+    font: size1Font,
+  ),
   '\u2016': // '\\Vert', '\u2225'
       StackDelimiterConf(
-          top: '\u2016', repeat: '\u2016', bottom: '\u2016', font: size1Font),
+    top: '\u2016',
+    repeat: '\u2016',
+    bottom: '\u2016',
+    font: size1Font,
+  ),
   '\u2223': // '\\lvert', '\\rvert', '\\mid'
       StackDelimiterConf(
-          top: '\u2223', repeat: '\u2223', bottom: '\u2223', font: size1Font),
+    top: '\u2223',
+    repeat: '\u2223',
+    bottom: '\u2223',
+    font: size1Font,
+  ),
   '\u2225': // '\\lVert', '\\rVert',
       StackDelimiterConf(
-          top: '\u2225', repeat: '\u2225', bottom: '\u2225', font: size1Font),
+    top: '\u2225',
+    repeat: '\u2225',
+    bottom: '\u2225',
+    font: size1Font,
+  ),
   '(': StackDelimiterConf(top: '\u239b', repeat: '\u239c', bottom: '\u239d'),
   ')': StackDelimiterConf(top: '\u239e', repeat: '\u239f', bottom: '\u23a0'),
   '[': StackDelimiterConf(top: '\u23a1', repeat: '\u23a2', bottom: '\u23a3'),
   ']': StackDelimiterConf(top: '\u23a4', repeat: '\u23a5', bottom: '\u23a6'),
   '{': StackDelimiterConf(
-      top: '\u23a7', middle: '\u23a8', bottom: '\u23a9', repeat: '\u23aa'),
+    top: '\u23a7',
+    middle: '\u23a8',
+    bottom: '\u23a9',
+    repeat: '\u23aa',
+  ),
   '}': StackDelimiterConf(
-      top: '\u23ab', middle: '\u23ac', bottom: '\u23ad', repeat: '\u23aa'),
+    top: '\u23ab',
+    middle: '\u23ac',
+    bottom: '\u23ad',
+    repeat: '\u23aa',
+  ),
   '\u230a': // '\\lfloor',
       StackDelimiterConf(top: '\u23a2', repeat: '\u23a2', bottom: '\u23a3'),
   '\u230b': // '\\rfloor',

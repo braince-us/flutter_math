@@ -24,6 +24,8 @@ const equations = [
 ];
 
 class EquationsPage extends StatelessWidget {
+  const EquationsPage({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) => Center(
         child: Container(

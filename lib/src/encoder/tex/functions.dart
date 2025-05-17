@@ -1,4 +1,4 @@
-library tex_encoder_functions;
+library;
 
 import 'package:collection/collection.dart';
 

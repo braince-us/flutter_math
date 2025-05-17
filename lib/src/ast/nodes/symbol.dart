@@ -23,7 +23,8 @@ class SymbolNode extends LeafNode {
   final bool variantForm;
 
   /// Effective atom type for this symbol;
-  late final AtomType atomType = overrideAtomType ??
+  late final AtomType atomType =
+      overrideAtomType ??
       getDefaultAtomTypeForSymbol(symbol, variantForm: variantForm, mode: mode);
 
   /// Overriding atom type;
@@ -32,6 +33,7 @@ class SymbolNode extends LeafNode {
   /// Overriding atom font;
   final FontOptions? overrideFont;
 
+  @override
   final Mode mode;
 
   // bool get noBreak => symbol == '\u00AF';
@@ -46,11 +48,15 @@ class SymbolNode extends LeafNode {
 
   @override
   BuildResult buildWidget(
-      MathOptions options, List<BuildResult?> childBuildResults) {
-    final expanded = symbol.runes.expand((code) {
-      final ch = String.fromCharCode(code);
-      return unicodeSymbols[ch]?.split('') ?? [ch];
-    }).toList(growable: false);
+    MathOptions options,
+    List<BuildResult?> childBuildResults,
+  ) {
+    final expanded = symbol.runes
+        .expand((code) {
+          final ch = String.fromCharCode(code);
+          return unicodeSymbols[ch]?.split('') ?? [ch];
+        })
+        .toList(growable: false);
 
     // If symbol is single code
     if (expanded.length == 1) {
@@ -70,7 +76,7 @@ class SymbolNode extends LeafNode {
           expanded[0] = '\u0237'; // dotless j, in math and text mode
         }
       }
-      GreenNode res = this.withSymbol(expanded[0]);
+      GreenNode res = withSymbol(expanded[0]);
       for (var ch in expanded.skip(1)) {
         final accent = unicodeAccents[ch];
         if (accent == null) {
@@ -88,10 +94,8 @@ class SymbolNode extends LeafNode {
     } else {
       // TODO: log a warning here.
       return BuildResult(
-        widget: Container(
-          height: 0,
-          width: 0,
-        ),
+        // ignore: sized_box_for_whitespace
+        widget: Container(height: 0, width: 0),
         options: options,
         italic: 0,
       );
@@ -112,13 +116,13 @@ class SymbolNode extends LeafNode {
   AtomType get rightType => atomType;
 
   @override
-  Map<String, Object?> toJson() => super.toJson()
-    ..addAll({
-      'mode': mode.toString(),
-      'symbol': unicodeLiteral(symbol),
-      if (variantForm) 'variantForm': variantForm,
-      if (overrideAtomType != null) 'atomType': overrideAtomType.toString(),
-    });
+  Map<String, Object?> toJson() =>
+      super.toJson()..addAll({
+        'mode': mode.toString(),
+        'symbol': unicodeLiteral(symbol),
+        if (variantForm) 'variantForm': variantForm,
+        if (overrideAtomType != null) 'atomType': overrideAtomType.toString(),
+      });
 
   SymbolNode withSymbol(String symbol) {
     if (symbol == this.symbol) return this;
