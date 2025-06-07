@@ -3,39 +3,8 @@ from fontTools.pens.boundsPen import BoundsPen
 import traceback
 import argparse
 
-def debug_font_structure(font_path):
-    """Debug the font structure to understand the issue"""
-    font = TTFont(font_path)
-
-    head = font['head']
-    hhea = font['hhea']
-    hmtx = font['hmtx']
-    cmap = font.getBestCmap()
-
-    print(f"Font: {font_path}")
-    print(f"Units per EM: {head.unitsPerEm}")
-
-    # Check hmtx structure
-    print(f"\nhmtx table type: {type(hmtx)}")
-    print(f"hmtx has metrics attr: {hasattr(hmtx, 'metrics')}")
-
-    if hasattr(hmtx, 'metrics'):
-        hmtx_keys = list(hmtx.metrics.keys())[:10]
-        print(f"First 10 hmtx keys: {hmtx_keys}")
-        print(f"hmtx keys type: {[type(k) for k in hmtx_keys[:3]]}")
-
-    # Check glyph order
-    glyph_order = font.getGlyphOrder()
-    print(f"First 10 glyph names: {glyph_order[:10]}")
-
-    # Check cmap
-    sample_cmap = dict(list(cmap.items())[:5])
-    print(f"Sample cmap entries: {sample_cmap}")
-
-    return font
-
-def extract_metrics_safe(font_path):
-    """Safely extract metrics using direct access methods"""
+def extract_all_available_characters(font_path):
+    """Extract metrics for ALL available characters in the font"""
     font = TTFont(font_path)
 
     head = font['head']
@@ -46,32 +15,48 @@ def extract_metrics_safe(font_path):
     units_per_em = head.unitsPerEm
     glyph_set = font.getGlyphSet()
 
-    # Use font-wide metrics as base
+    # Use font-wide metrics as fallback
     font_height = hhea.ascender / units_per_em
     font_depth = -hhea.descender / units_per_em if hhea.descender < 0 else 0
 
+    print(f"Font: {font_path}")
+    print(f"Units per EM: {units_per_em}")
+    print(f"Total glyphs in font: {len(font.getGlyphOrder())}")
+    print(f"Characters in cmap: {len(cmap)}")
     print(f"Font-wide metrics: height={font_height:.5f}, depth={font_depth:.5f}")
 
-    metrics = {}
+    # Get all Unicode code points available in the font
+    all_unicode_points = sorted(cmap.keys())
+    print(f"Unicode range: {min(all_unicode_points)} - {max(all_unicode_points)}")
 
-    # Test with basic ASCII characters
-    for unicode_val in range(32, 127):
-        if unicode_val in cmap:
+    # Show some sample ranges
+    basic_latin = [cp for cp in all_unicode_points if 32 <= cp <= 126]
+    latin_extended = [cp for cp in all_unicode_points if 127 <= cp <= 255]
+    other_ranges = [cp for cp in all_unicode_points if cp > 255]
+
+    print(f"Basic Latin (32-126): {len(basic_latin)} characters")
+    print(f"Latin Extended (127-255): {len(latin_extended)} characters")
+    print(f"Other ranges (>255): {len(other_ranges)} characters")
+
+    if other_ranges:
+        print(f"Sample other characters: {other_ranges[:20]}")
+
+    metrics = {}
+    processed = 0
+    errors = 0
+
+    print(f"\nProcessing all {len(all_unicode_points)} characters...")
+
+    for i, unicode_val in enumerate(all_unicode_points):
+        if i % 100 == 0:
+            print(f"Progress: {i}/{len(all_unicode_points)} ({i/len(all_unicode_points)*100:.1f}%)")
+
+        try:
             glyph_name = cmap[unicode_val]
 
-            print(f"Processing {unicode_val} ({chr(unicode_val)}) -> '{glyph_name}'")
-
-            try:
-                # Try to get horizontal metrics directly
-                try:
-                    advance_width, lsb = hmtx.metrics[glyph_name]
-                    print(f"  Found hmtx: width={advance_width}, lsb={lsb}")
-                except KeyError:
-                    print(f"  No hmtx for '{glyph_name}', skipping")
-                    continue
-                except Exception as e:
-                    print(f"  hmtx access error: {e}")
-                    continue
+            # Get horizontal metrics
+            if glyph_name in hmtx.metrics:
+                advance_width, lsb = hmtx.metrics[glyph_name]
 
                 # Try to get glyph bounds
                 height = font_height  # default
@@ -88,13 +73,9 @@ def extract_metrics_safe(font_path):
                             x_min, y_min, x_max, y_max = bounds
                             height = y_max / units_per_em if y_max > 0 else font_height
                             depth = -y_min / units_per_em if y_min < 0 else 0
-                            print(f"  Got bounds: {bounds}")
-                        else:
-                            print(f"  No bounds, using font defaults")
-                    else:
-                        print(f"  Glyph not in glyph_set, using font defaults")
-                except Exception as e:
-                    print(f"  Bounds error: {e}, using font defaults")
+                except:
+                    # Use font defaults if bounds extraction fails
+                    pass
 
                 # Calculate final metrics
                 width = advance_width / units_per_em
@@ -112,116 +93,110 @@ def extract_metrics_safe(font_path):
                     'width': round(width, 5)
                 }
 
-                print(f"  Final: d={depth:.3f}, h={height:.3f}, w={width:.3f}")
+                processed += 1
+            else:
+                errors += 1
 
-            except Exception as e:
-                print(f"  Error processing {unicode_val}: {e}")
-                continue
+        except Exception as e:
+            errors += 1
+            if errors <= 10:  # Only print first 10 errors
+                print(f"Error processing {unicode_val}: {e}")
+
+    print(f"\nSuccessfully processed: {processed} characters")
+    print(f"Errors: {errors} characters")
 
     return metrics
 
-def create_minimal_metrics(font_path):
-    """Create minimal metrics using only basic font info"""
-    font = TTFont(font_path)
+def analyze_character_ranges(metrics):
+    """Analyze and categorize the extracted characters"""
+    if not metrics:
+        return
 
-    head = font['head']
-    hhea = font['hhea']
-    hmtx = font['hmtx']
-    cmap = font.getBestCmap()
+    unicode_points = sorted(metrics.keys())
 
-    units_per_em = head.unitsPerEm
+    print(f"\n=== Character Analysis ===")
+    print(f"Total characters extracted: {len(unicode_points)}")
 
-    # Use fixed font-wide metrics
-    font_height = 0.886  # From previous output
-    font_depth = 0.374   # From previous output
-
-    metrics = {}
-
-    print(f"Creating minimal metrics with fixed values:")
-    print(f"  Height: {font_height}")
-    print(f"  Depth: {font_depth}")
-
-    # Define standard character widths (approximated)
-    standard_widths = {
-        32: 0.25,   # space
-        33: 0.28,   # !
-        48: 0.5,    # 0
-        49: 0.5,    # 1
-        50: 0.5,    # 2
-        51: 0.5,    # 3
-        52: 0.5,    # 4
-        53: 0.5,    # 5
-        54: 0.5,    # 6
-        55: 0.5,    # 7
-        56: 0.5,    # 8
-        57: 0.5,    # 9
-        65: 0.6,    # A
-        66: 0.6,    # B
-        67: 0.6,    # C
-        68: 0.6,    # D
-        69: 0.55,   # E
-        70: 0.55,   # F
-        71: 0.65,   # G
-        72: 0.6,    # H
-        73: 0.25,   # I
-        74: 0.45,   # J
-        75: 0.6,    # K
-        76: 0.5,    # L
-        77: 0.7,    # M
-        78: 0.6,    # N
-        79: 0.65,   # O
-        80: 0.55,   # P
-        81: 0.65,   # Q
-        82: 0.6,    # R
-        83: 0.55,   # S
-        84: 0.55,   # T
-        85: 0.6,    # U
-        86: 0.6,    # V
-        87: 0.8,    # W
-        88: 0.6,    # X
-        89: 0.6,    # Y
-        90: 0.55,   # Z
-        97: 0.5,    # a
-        98: 0.5,    # b
-        99: 0.45,   # c
-        100: 0.5,   # d
-        101: 0.5,   # e
-        102: 0.3,   # f
-        103: 0.5,   # g
-        104: 0.5,   # h
-        105: 0.25,  # i
-        106: 0.25,  # j
-        107: 0.45,  # k
-        108: 0.25,  # l
-        109: 0.7,   # m
-        110: 0.5,   # n
-        111: 0.5,   # o
-        112: 0.5,   # p
-        113: 0.5,   # q
-        114: 0.35,  # r
-        115: 0.45,  # s
-        116: 0.3,   # t
-        117: 0.5,   # u
-        118: 0.45,  # v
-        119: 0.65,  # w
-        120: 0.45,  # x
-        121: 0.45,  # y
-        122: 0.45,  # z
+    # Categorize by Unicode ranges
+    ranges = {
+        'Basic Latin (0-127)': [cp for cp in unicode_points if 0 <= cp <= 127],
+        'Latin-1 Supplement (128-255)': [cp for cp in unicode_points if 128 <= cp <= 255],
+        'Latin Extended-A (256-383)': [cp for cp in unicode_points if 256 <= cp <= 383],
+        'Latin Extended-B (384-591)': [cp for cp in unicode_points if 384 <= cp <= 591],
+        'IPA Extensions (592-687)': [cp for cp in unicode_points if 592 <= cp <= 687],
+        'Spacing Modifier Letters (688-767)': [cp for cp in unicode_points if 688 <= cp <= 767],
+        'Combining Diacritical Marks (768-879)': [cp for cp in unicode_points if 768 <= cp <= 879],
+        'Greek and Coptic (880-1023)': [cp for cp in unicode_points if 880 <= cp <= 1023],
+        'General Punctuation (8192-8303)': [cp for cp in unicode_points if 8192 <= cp <= 8303],
+        'Mathematical Operators (8704-8959)': [cp for cp in unicode_points if 8704 <= cp <= 8959],
+        'Other ranges': [cp for cp in unicode_points if cp > 1023 and not (8192 <= cp <= 8303) and not (8704 <= cp <= 8959)]
     }
 
-    for unicode_val in range(32, 127):
-        if unicode_val in cmap:
-            width = standard_widths.get(unicode_val, 0.5)  # default width
+    for range_name, codepoints in ranges.items():
+        if codepoints:
+            print(f"{range_name}: {len(codepoints)} characters")
+            if len(codepoints) <= 20:
+                # Show all if small range
+                chars = [f"{cp}('{chr(cp)}')" if 32 <= cp <= 126 else f"{cp}" for cp in codepoints[:20]]
+                print(f"  {', '.join(chars)}")
+            else:
+                # Show first few
+                chars = [f"{cp}('{chr(cp)}')" if 32 <= cp <= 126 else f"{cp}" for cp in codepoints[:10]]
+                print(f"  First 10: {', '.join(chars)}")
 
-            metrics[unicode_val] = {
-                'depth': font_depth,
-                'height': font_height,
-                'italic': 0.0,
-                'skew': 0.0,
-                'width': width
-            }
+def save_complete_metrics(metrics, font_name="Excalifont-Regular"):
+    """Save all metrics to a Dart file"""
+    if not metrics:
+        print("No metrics to save!")
+        return
 
-    return metrics
+    dart_output = f'  "{font_name}": {{\n'
+
+    # Sort by Unicode code point
+    for codepoint in sorted(metrics.keys()):
+        metric = metrics[codepoint]
+        dart_output += f'    {codepoint}: CharacterMetrics({metric["depth"]}, {metric["height"]}, {metric["italic"]}, {metric["skew"]}, {metric["width"]}),\n'
+
+    dart_output += '  },'
+
+    filename = f'{font_name.lower().replace("-", "_")}_complete_metrics.dart'
+
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write('// Complete font metrics for ' + font_name + '\n')
+        f.write(f'// Total characters: {len(metrics)}\n')
+        f.write('// Add this to your fontMetricsData map\n\n')
+        f.write(dart_output)
+
+    print(f"\nComplete metrics saved to: {filename}")
+    return filename
+
+def show_sample_characters(metrics, num_samples=20):
+    """Show a sample of different character types"""
+    if not metrics:
+        return
+
+    print(f"\n=== Sample Characters ===")
+
+    # Basic Latin
+    basic_latin = [(cp, metrics[cp]) for cp in sorted(metrics.keys()) if 32 <= cp <= 126]
+    if basic_latin:
+        print("Basic Latin sample:")
+        for cp, metric in basic_latin[:10]:
+            char = chr(cp)
+            print(f"  {cp} ('{char}'): CharacterMetrics({metric['depth']}, {metric['height']}, {metric['italic']}, {metric['skew']}, {metric['width']}),")
+
+    # Extended characters
+    extended = [(cp, metrics[cp]) for cp in sorted(metrics.keys()) if cp > 126]
+    if extended:
+        print(f"\nExtended characters sample (first 10 of {len(extended)}):")
+        for cp, metric in extended[:10]:
+            try:
+                char = chr(cp)
+                char_display = char if ord(char) >= 32 else f"\\u{cp:04x}"
+            except:
+                char_display = f"\\u{cp:04x}"
+            print(f"  {cp} ('{char_display}'): CharacterMetrics({metric['depth']}, {metric['height']}, {metric['italic']}, {metric['skew']}, {metric['width']}),")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate character metrics from a TTF font file.")
@@ -231,44 +206,21 @@ if __name__ == "__main__":
     font_path = args.font_path
 
     try:
-        print("=== Debugging font structure ===")
-        debug_font_structure(font_path)
+        print("=== Extracting ALL available characters ===")
+        all_metrics = extract_all_available_characters(font_path)
 
-        print("\n=== Attempting safe extraction ===")
-        metrics = extract_metrics_safe(font_path)
+        if all_metrics:
+            analyze_character_ranges(all_metrics)
+            show_sample_characters(all_metrics)
+            filename = save_complete_metrics(all_metrics)
 
-        if not metrics:
-            print("\n=== Using minimal metrics approach ===")
-            metrics = create_minimal_metrics(font_path)
+            print(f"\nSUCCESS!")
+            print(f"Extracted metrics for {len(all_metrics)} characters")
+            print(f"Saved to: {filename}")
+            print(f"Ready to integrate into flutter_math!")
 
-        if metrics:
-            print(f"\nGenerated metrics for {len(metrics)} characters")
-
-            # Generate Dart code
-            dart_output = f'  "{font_path.split("/")[-1].replace(".ttf", "")}": {{\n'
-            for codepoint in sorted(metrics.keys()):
-                metric = metrics[codepoint]
-                dart_output += f'    {codepoint}: CharacterMetrics({metric["depth"]}, {metric["height"]}, {metric["italic"]}, {metric["skew"]}, {metric["width"]}),\n'
-            dart_output += '  },'
-
-            # Save to file
-            with open(font_path.split('/')[-1].replace('.ttf', '_metrics.dart'), 'w') as f:
-                f.write('// Generated font metrics\n')
-                f.write('// Add this to your fontMetricsData map\n\n')
-                f.write(dart_output)
-
-            print(f"Dart code saved to {font_path.split('/')[-1].replace('.ttf', '_metrics.dart')}")
-
-            # Show sample characters
-            print("\nSample characters:")
-            sample_chars = [32, 65, 66, 67, 97, 98, 99, 48, 49, 50]
-            for codepoint in sample_chars:
-                if codepoint in metrics:
-                    char = chr(codepoint)
-                    metric = metrics[codepoint]
-                    print(f"  {codepoint} ('{char}'): CharacterMetrics({metric['depth']}, {metric['height']}, {metric['italic']}, {metric['skew']}, {metric['width']}),")
         else:
-            print("All methods failed")
+            print("Failed to extract any characters")
 
     except Exception as e:
         print(f"Script failed: {e}")
