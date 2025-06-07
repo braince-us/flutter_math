@@ -26,7 +26,12 @@ part of '../katex_base.dart';
 const _textEntries = {
   [
     // Font families
-    '\\text', '\\textrm', '\\textsf', '\\texttt', '\\textnormal',
+    '\\text',
+    '\\textrm',
+    '\\textsf',
+    '\\texttt',
+    '\\textnormal',
+    '\\excalifont',
     // Font weights
     '\\textbf', '\\textmd',
     // Font Shapes
@@ -36,7 +41,7 @@ const _textEntries = {
     greediness: 2,
     allowedInText: true,
     handler: _textHandler,
-  )
+  ),
 };
 GreenNode _textHandler(TexParser parser, FunctionContext context) {
   final body = parser.parseArgNode(mode: Mode.text, optional: false)!;
