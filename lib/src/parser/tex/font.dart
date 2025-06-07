@@ -129,32 +129,17 @@ const texMathFontOptions = {
   //   fontFamily: 'Math',
   //   fontShape: FontStyle.italic,
   // ),
+  '\\mathit': FontOptions(fontFamily: 'Main', fontShape: FontStyle.italic),
 
-  '\\mathit': FontOptions(
-    fontFamily: 'Main',
-    fontShape: FontStyle.italic,
-  ),
+  '\\mathrm': FontOptions(fontFamily: 'Main', fontShape: FontStyle.normal),
 
-  '\\mathrm': FontOptions(
-    fontFamily: 'Main',
-    fontShape: FontStyle.normal,
-  ),
-
-  '\\mathbf': FontOptions(
-    fontFamily: 'Main',
-    fontWeight: FontWeight.bold,
-  ),
+  '\\mathbf': FontOptions(fontFamily: 'Main', fontWeight: FontWeight.bold),
 
   '\\boldsymbol': FontOptions(
     fontFamily: 'Math',
     fontWeight: FontWeight.bold,
     fontShape: FontStyle.italic,
-    fallback: [
-      FontOptions(
-        fontFamily: 'Main',
-        fontWeight: FontWeight.bold,
-      )
-    ],
+    fallback: [FontOptions(fontFamily: 'Main', fontWeight: FontWeight.bold)],
   ),
 
   '\\mathbb': FontOptions(fontFamily: 'AMS'),
@@ -175,6 +160,7 @@ const texTextFontOptions = {
   '\\textsf': PartialFontOptions(fontFamily: 'SansSerif'),
   '\\texttt': PartialFontOptions(fontFamily: 'Typewriter'),
   '\\textnormal': PartialFontOptions(fontFamily: 'Main'),
+  '\\excalifont': PartialFontOptions(fontFamily: 'Excalifont'),
   '\\textbf': PartialFontOptions(fontWeight: FontWeight.bold),
   '\\textmd': PartialFontOptions(fontWeight: FontWeight.normal),
   '\\textit': PartialFontOptions(fontShape: FontStyle.italic),

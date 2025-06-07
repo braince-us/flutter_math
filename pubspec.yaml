@@ -1,5 +1,5 @@
 name: flutter_math_fork
-description: Fast and high-quality TeX math equation rendering with pure Dart & Flutter. 
+description: Fast and high-quality TeX math equation rendering with pure Dart & Flutter.
 version: 0.7.4
 homepage: https://github.com/simpleclub/flutter_math
 
@@ -78,3 +78,6 @@ flutter:
     - family: KaTeX_Size4
       fonts:
         - asset: lib/katex_fonts/fonts/KaTeX_Size4-Regular.ttf
+    - family: KaTeX_Excalifont
+      fonts:
+        - asset: lib/katex_fonts/fonts/KaTeX_Excalifont-Regular.ttf
